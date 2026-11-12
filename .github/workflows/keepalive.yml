@@ -1,0 +1,33 @@
+name: keep-alive
+
+# Drzi Supabase bazu budnom (besplatni paket se uspavljuje posle 7 dana bez zahteva)
+# i pravi mali commit da GitHub ne iskljuci zakazani workflow zbog neaktivnosti.
+
+on:
+  schedule:
+    - cron: "0 6 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ping Supabase
+        run: |
+          curl -sf "https://dlkojbxmveuinmymirvl.supabase.co/rest/v1/services?select=name" \
+            -H "apikey: sb_publishable_u7fVBCl4W6V9V7ULstLxAw_m4C5iQjR" -o /dev/null
+          echo "Supabase ping OK"
+
+      - name: Zabelezi ping
+        run: |
+          date -u +"%Y-%m-%d %H:%M UTC" > last-ping.txt
+          git config user.name "keep-alive"
+          git config user.email "keep-alive@users.noreply.github.com"
+          git add last-ping.txt
+          git commit -m "keep-alive ping" || exit 0
+          git push
